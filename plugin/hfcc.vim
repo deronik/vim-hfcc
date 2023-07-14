@@ -19,3 +19,4 @@ endif
 
 command! HFCCSelection :call hfcc#hfcc_selected()
 command! HFCCAll :call hfcc#hfcc_current_buffer()
+command! HFCCInPlace :call hfcc#hfcc_in_place()

@@ -2,10 +2,8 @@ python3 << EndPython3
 import vim
 import requests
 
-
 def get_url(model="bigcode/starcoder"):
     return f"https://api-inference.huggingface.co/models/{model}"
-
 
 def current_lines():
     """ get last mark visual selection <> """
@@ -42,7 +40,7 @@ def get_prediction(_input):
         "temperature": float(vim.eval("g:hfcc_temperature")),
         "top_p": float(vim.eval("g:hfcc_top_p")),
         "do_sample": True,
-        # "stop": vim.eval("g:hfcc_stoptoken")
+        "stop": [vim.eval("g:hfcc_stoptoken"), ]
     }
     url = get_url(vim.eval("g:hfcc_model"))
     body = {"inputs": _input, "parameters": settings}
@@ -57,6 +55,12 @@ def get_prediction(_input):
     return result[0]['generated_text']
 
 
+def remove_stop_token(prediction):
+    if vim.eval("g:hfcc_stoptoken"):
+        return prediction.replace(vim.eval("g:hfcc_stoptoken"), "")
+    return suffix_prediciton
+
+
 def hfcc_selected():
     lines = current_lines()
     if not lines:
@@ -64,7 +68,8 @@ def hfcc_selected():
         return
     prediction = get_prediction(lines)
     if prediction:
-        replace_current_lines(prediction)
+        clean_prediction = remove_stop_token(prediction)
+        replace_current_lines(clean_prediction)
 
 
 def hfcc_current_buffer():
@@ -72,7 +77,22 @@ def hfcc_current_buffer():
     lines = "\n".join(buf[:])
     prediction = get_prediction(lines)
     if prediction:
-        buf[:] = prediction.split('\n')
+        clean_prediction = remove_stop_token(prediction)
+        buf[:] = clean_prediction.split('\n')
+
+
+def hfcc_in_place():
+    current_line_index = vim.current.window.cursor[0]
+    buf = vim.current.buffer
+    lines = list(buf)
+    lines[current_line_index]+="<fim_suffix>"
+    prediction_input = "<fim_prefix>\n"+"\n".join(lines)+"\n<fim_middle>"
+    prediction = get_prediction(prediction_input)
+    if not prediction:
+        return None
+    suffix_prediciton = prediction.split("<fim_middle>")[-1]
+    clean_prediction = remove_stop_token(suffix_prediciton)
+    buf[current_line_index-1:current_line_index-1] = clean_prediction.split("\n")
 
 EndPython3
 
@@ -81,4 +101,7 @@ function hfcc#hfcc_selected()
 endfunction
 function hfcc#hfcc_current_buffer()
     :py3 hfcc_current_buffer()
+endfunction
+function hfcc#hfcc_in_place()
+    :py3 hfcc_in_place()
 endfunction
