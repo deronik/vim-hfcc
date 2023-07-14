@@ -17,6 +17,6 @@ if !exists("g:hfcc_token")
     let g:hfcc_token = ""
 endif
 
-command! HFCCSelection :call hfcc#hfcc_selected()
+command! -range HFCCSelection <line1>,<line2>call hfcc#hfcc_selected()
 command! HFCCAll :call hfcc#hfcc_current_buffer()
 command! HFCCInPlace :call hfcc#hfcc_in_place()

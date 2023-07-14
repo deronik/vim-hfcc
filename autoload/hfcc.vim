@@ -14,26 +14,16 @@ except ImportError:
 def get_url(model="bigcode/starcoder"):
     return f"https://api-inference.huggingface.co/models/{model}"
 
-def current_lines():
-    """ get last mark visual selection <> """
-    buf = vim.current.buffer
-    if not buf.mark('<') or not buf.mark('>'):
-        return None
-    lnum1, col1 = buf.mark('<')
-    lnum2, col2 = buf.mark('>')
-    lines = vim.eval('getline({}, {})'.format(lnum1, lnum2))
-    lines[0] = lines[0][col1:]
-    lines[-1] = lines[-1][:col2]
+def current_lines(start, end):
+    lines = vim.eval('getline({}, {})'.format(start, end))
     return "\n".join(lines)
 
 
-def replace_current_lines(new_text):
+def replace_current_lines(start, end, new_text):
     """ replace text in buffer marked by visual selection <> """
     new_lines = new_text.split("\n")
     buf = vim.current.buffer
-    lnum1, col1 = buf.mark('<')
-    lnum2, col2 = buf.mark('>')
-    buf[lnum1-1:lnum2]=new_lines
+    buf[start-1:end] = new_lines
 
 
 def get_prediction(_input):
@@ -70,15 +60,25 @@ def remove_stop_token(prediction):
     return suffix_prediciton
 
 
-def hfcc_selected():
-    lines = current_lines()
+def hfcc_selected(start=None, end=None):
+    if not start and not end:
+        # try to get last visual block
+        buf = vim.current.buffer
+        if not buf.mark('<') or not buf.mark('>'):
+            print("selected block isn't found")
+            return None
+        start, _ = buf.mark('<')
+        end, _ = buf.mark('>')
+    start = int(start)
+    end = int(end)
+    lines = current_lines(start, end)
     if not lines:
         print("selected block isn't found")
         return
     prediction = get_prediction(lines)
     if prediction:
         clean_prediction = remove_stop_token(prediction)
-        replace_current_lines(clean_prediction)
+        replace_current_lines(start, end, clean_prediction)
 
 
 def hfcc_current_buffer():
@@ -107,8 +107,14 @@ def hfcc_in_place():
 
 EndPython3
 
-function hfcc#hfcc_selected()
-    :py3 hfcc_selected()
+function hfcc#hfcc_selected() range
+    if a:firstline != 0 && a:lastline != 0
+        let start = a:firstline
+        let end = a:lastline
+        :py3 hfcc_selected(vim.eval('start'), vim.eval('end'))
+    else
+        :py3 hfcc_selected()
+    endif
 endfunction
 function hfcc#hfcc_current_buffer()
     :py3 hfcc_current_buffer()
