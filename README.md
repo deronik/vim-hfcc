@@ -27,3 +27,5 @@ g:hfcc_top_p=0.95
 - :HFCCSelection - apply code completetion for last selected segment
 - :HFCCAll - apply code completetion for full file
 - :HFCCInPlace - apply code completeion to current cursor place
+- :HFCCChat <optional parameter question> - create chat session with starchat-beta
+- :HFCCChatRefresh - refresh information in chat buffer (ask new questions)
