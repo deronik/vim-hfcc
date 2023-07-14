@@ -85,14 +85,16 @@ def hfcc_in_place():
     current_line_index = vim.current.window.cursor[0]
     buf = vim.current.buffer
     lines = list(buf)
-    lines[current_line_index]+="<fim_suffix>"
+    lines[current_line_index-1]+="<fim_suffix>\n"
     prediction_input = "<fim_prefix>\n"+"\n".join(lines)+"\n<fim_middle>"
     prediction = get_prediction(prediction_input)
     if not prediction:
         return None
     suffix_prediciton = prediction.split("<fim_middle>")[-1]
     clean_prediction = remove_stop_token(suffix_prediciton)
-    buf[current_line_index-1:current_line_index-1] = clean_prediction.split("\n")
+    prediction_lines = clean_prediction.split("\n")
+    buf[current_line_index-1]+=prediction_lines[0]
+    buf[current_line_index:current_line_index] = prediction_lines[1:]
 
 EndPython3
 
