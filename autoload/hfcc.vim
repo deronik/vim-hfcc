@@ -1,6 +1,15 @@
+if !has('python3')
+  echo "Python 3 support is required for HFCC plugin"
+  finish
+endif
+
 python3 << EndPython3
 import vim
-import requests
+try:
+    import requests
+except ImportError:
+    print("Error: requests module not found. Please install requests module")
+    raise
 
 def get_url(model="bigcode/starcoder"):
     return f"https://api-inference.huggingface.co/models/{model}"
