@@ -141,7 +141,7 @@ def unpretty_buffer(result):
     assist_fixed = user_fixed.replace("Assistant: ", "<|end|><|assistant|>")
     end_removed = assist_fixed.removeprefix("<|end|>")
     # set <|end|> if last turn is user
-    result = re.findall("<\|user\|>|<\|assistant\|>", end_removed)
+    result = re.findall(r"<\|user\|>|<\|assistant\|>", end_removed)
     if result[-1] == "<|user|>":
         return end_removed + "<|end|>"
     return end_removed
